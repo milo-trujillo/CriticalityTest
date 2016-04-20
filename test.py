@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket, threading
+import socket, threading, random
 from traceroute import traceroute
 
 """
@@ -25,20 +25,41 @@ routes = []
 routeLock = threading.RLock()
 threads = []
 
+random.seed()
+
 print "Initating test. Spinning up traceroutes to " + str(len(Hosts)) + " destinations."
 #for i in range(0, 1):
 for i in range(0, len(Hosts)):
 	host = Hosts[i]
-	worker = threading.Thread(target=traceroute, args=(host, BasePort + i, routes, routeLock))
+	port = random.randint(33434, 65500) # Max is a little less than u_short max
+	worker = threading.Thread(target=traceroute, args=(host, port, routes, routeLock))
 	threads += [worker]
 	worker.start()
+
+print "Please be patient, it can take a few minutes to collect our data..."
 
 for i in range(0, len(threads)):
 	threads[i].join()
 
-print "All traceroutes complete."
-print "========================="
+print ""
+print "================================================"
+print "All traceroutes complete. Summary is as follows."
+print "================================================"
+print ""
 
-for i in range(0, len(routes)):
-	print "To reach host " + str(i)
-	print str(routes[i])
+commonHosts = []
+tmp = None
+for i in range(0, 200):
+	for j in range(0, len(routes)):
+		route = routes[j]
+		if( i < len(route) ):
+			if( j == 0 ):
+				tmp = route[i]
+			if( tmp != route[i] ):
+				break
+			if( j == len(routes) - 1 ):
+				commonHosts += [tmp]
+
+print "Common hosts in all routes: %d" % (len(commonHosts))
+for host in commonHosts:
+	print host
