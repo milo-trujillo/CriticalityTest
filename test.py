@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket
+import socket, threading
 from traceroute import traceroute
 
 """
@@ -21,7 +21,24 @@ Hosts = ["www.seattle.gov", "austintexas.gov", "www1.maine.gov", "cityoflondon.g
 Timeout = 120 # Maximum seconds to spend reaching any destination
 BasePort = 33434 # Traceroute uses ports 33434 through 33534
 
+routes = []
+routeLock = threading.RLock()
+threads = []
+
 print "Initating test. Spinning up traceroutes to " + str(len(Hosts)) + " destinations."
-for host in Hosts:
-	print "Attempting to reach %s at %s" % (host, socket.gethostbyname(host))
-	traceroute(host, BasePort)
+#for i in range(0, 1):
+for i in range(0, len(Hosts)):
+	host = Hosts[i]
+	worker = threading.Thread(target=traceroute, args=(host, BasePort + i, routes, routeLock))
+	threads += [worker]
+	worker.start()
+
+for i in range(0, len(threads)):
+	threads[i].join()
+
+print "All traceroutes complete."
+print "========================="
+
+for i in range(0, len(routes)):
+	print "To reach host " + str(i)
+	print str(routes[i])
