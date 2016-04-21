@@ -6,6 +6,12 @@ The Internet is a hybrid system - at a high level it is widely decentralized and
 
 This is a tool for auto-detecting the degree of local network centralization. This tool will explore routing information to reach a number of geographically diverse servers (three across the United States, more in Japan, India, Australia, and England). In a decentralized network the routes to reach each of these systems would be completely different. However, by identifying the overlaps between these routes we can determine how many systems are “critical hubs” all of our traffic must flow through before reaching the larger web.
 
+To run the test:
+
+    sudo ./test.py
+
+Results will appear in a few minutes after the traceroutes complete. Creating raw packets requires superuser access, so this tool must be run with `sudo`.
+
 **NOTE**
 
 At present this tool is only known to work on OSX. It will probably run correctly on any BSD system. However, it does *not* work on Linux systems. I think the Linux kernel steps on one of the IP or UDP headers I create and overrides information I was using for tracking responses.
