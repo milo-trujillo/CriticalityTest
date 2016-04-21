@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket, threading, random
+import socket, threading, random, numpy
 from traceroute import traceroute
 
 """
@@ -21,45 +21,69 @@ Hosts = ["www.seattle.gov", "austintexas.gov", "www1.maine.gov", "cityoflondon.g
 Timeout = 120 # Maximum seconds to spend reaching any destination
 BasePort = 33434 # Traceroute uses ports 33434 through 33534
 
-routes = []
-routeLock = threading.RLock()
-threads = []
+# This finds the common hosts at the start of every route
+def findCommonHops(routes):
+	if( len(routes) == 0 ):
+		return []
 
-random.seed()
+	# Find the shortest route - we can't have any critical hops past that length
+	minLen = len(routes[0])
+	for r in routes:
+		if( len(r) < minLen ):
+			minLen = len(r)
 
-print "Initating test. Spinning up traceroutes to " + str(len(Hosts)) + " destinations."
-#for i in range(0, 1):
-for i in range(0, len(Hosts)):
-	host = Hosts[i]
-	port = random.randint(33434, 65500) # Max is a little less than u_short max
-	worker = threading.Thread(target=traceroute, args=(host, port, routes, routeLock))
-	threads += [worker]
-	worker.start()
+	data = numpy.array(routes)
+	commonHops = []
+	for i in range(0, minLen):
+		col = data[:,i] # Extract ith column
+		match = all(x == col[0] for x in col)
+		if( match ):
+			commonHops += [col[0]]
+		else:
+			return commonHops
+	return commonHops 
 
-print "Please be patient, it can take a few minutes to collect our data..."
+# Reverse lookup, get a domain name for an IP address if possible
+def getHostname(IP):
+	try:
+		name, alias, addresslist = socket.gethostbyaddr(host)
+		return name
+	except socket.herror:
+		return "Unknown Host"
 
-for i in range(0, len(threads)):
-	threads[i].join()
+if __name__ == "__main__":
+	routes = []
+	routeLock = threading.RLock()
+	threads = []
 
-print ""
-print "================================================"
-print "All traceroutes complete. Summary is as follows."
-print "================================================"
-print ""
+	random.seed()
 
-commonHosts = []
-tmp = None
-for i in range(0, 200):
-	for j in range(0, len(routes)):
-		route = routes[j]
-		if( i < len(route) ):
-			if( j == 0 ):
-				tmp = route[i]
-			if( tmp != route[i] ):
-				break
-			if( j == len(routes) - 1 ):
-				commonHosts += [tmp]
+	print "Initating test. Spinning up traceroutes to %d destinations." % (len(Hosts))
+	#for i in range(0, 1):
+	for i in range(0, len(Hosts)):
+		host = Hosts[i]
+		# Choose a random high port that's unlikely to be listened to
+		port = random.randint(33434, 65500)
+		worker = threading.Thread(
+			target=traceroute, 
+			args=(host, port, routes, routeLock))
+		threads += [worker]
+		worker.start()
 
-print "Common hosts in all routes: %d" % (len(commonHosts))
-for host in commonHosts:
-	print host
+	print "Please be patient, it can take a few minutes to collect our data..."
+
+	for i in range(0, len(threads)):
+		threads[i].join()
+
+	print ""
+	print "================================================"
+	print "All traceroutes complete. Summary is as follows."
+	print "================================================"
+	print ""
+
+	common = findCommonHops(routes)
+
+	print "Leading common hosts in all routes: %d" % (len(common))
+	for host in common:
+		name = getHostname(host)
+		print "%s\t(%s)" % (host, name)
