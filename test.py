@@ -50,7 +50,7 @@ def getHostname(IP):
 	try:
 		name, alias, addresslist = socket.gethostbyaddr(host)
 		return name
-	except socket.herror:
+	except (socket.error, socket.herror, socket.gaierror, socket.timeout):
 		return "Unknown Host"
 
 if __name__ == "__main__":
