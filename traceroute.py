@@ -101,7 +101,17 @@ def traceroute(host, port, routes, lock):
 			with lock:
 				routes += [route]
 				print "Host '%s' reached. Hops: %d" % (host, ttl)
+				if( Debug ):
+					print routeToString(route)
 			break
+
+def routeToString(route):
+	s = ""
+	for r in route:
+		s += (str(r) + ",")
+	if( len(s) > 0 ):
+		return s[:-1]
+	return ""
 
 """
  I read how to make a raw IP header from:
@@ -167,18 +177,3 @@ def getICMPid(packet):
 	# in wireshark we know we need to scroll in 52, not 48. Why? Magic.
 
 	return struct.unpack_from('!H', packet, 52)[0]
-
-	#header = packet[28:56]
-	#ip_header = header[:20]
-	#udp_data = header[20:]
-	#udp_src_port = struct.unpack('H', udp_data[:2])
-	#return udp_src_port
-
-	"""
-	print "Type: %s" % (str(_type))
-	print "Code: %s" % (str(code))
-	print "Checksum: %s" % (str(checksum))
-	print "ID: %s" % (str(_id))
-	print "Sequence: %s" % (str(sequence))
-	return _id
-	"""
