@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import socket, threading, random, numpy
+import socket, threading, random
 from traceroute import traceroute
 
 """
@@ -21,6 +21,9 @@ Hosts = ["www.seattle.gov", "austintexas.gov", "www1.maine.gov", "cityoflondon.g
 Timeout = 120 # Maximum seconds to spend reaching any destination
 BasePort = 33434 # Traceroute uses ports 33434 through 33534
 
+def column(matrix, i):
+	return [row[i] for row in matrix]
+
 # This finds the common hosts at the start of every route
 def findCommonHops(routes):
 	if( len(routes) == 0 ):
@@ -32,10 +35,9 @@ def findCommonHops(routes):
 		if( len(r) < minLen ):
 			minLen = len(r)
 
-	data = numpy.array(routes)
 	commonHops = []
 	for i in range(0, minLen):
-		col = data[:,i] # Extract ith column
+		col = column(routes, i)
 		match = all(x == col[0] for x in col)
 		if( match ):
 			commonHops += [col[0]]
