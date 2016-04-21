@@ -41,8 +41,8 @@ def findCommonHops(routes):
 		match = all(x == col[0] for x in col)
 		if( match ):
 			commonHops += [col[0]]
-		#else:
-			#return commonHops
+		else:
+			return commonHops
 	return commonHops 
 
 # Reverse lookup, get a domain name for an IP address if possible
@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
 	common = findCommonHops(routes)
 
-	print "Common hosts in all routes: %d" % (len(common))
+	print "Leading common hosts in all routes: %d" % (len(common))
 	for host in common:
 		name = getHostname(host)
 		print "%s\t(%s)" % (host, name)
